@@ -81,20 +81,36 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900">
-      <div className="bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-md">
-        <h2 className="text-3xl font-bold text-white mb-6 text-center">
-          {isSignup ? 'Admin Registration' : 'Admin Login'}
-        </h2>
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4 font-sans">
+      <div className="bg-white p-10 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 w-full max-w-md">
+        
+        {/* Brand Header */}
+        <div className="flex flex-col items-center mb-8">
+          <img 
+             src="/logo512.png" 
+             alt="Digdarshan Logo" 
+             className="w-20 h-20 object-contain mb-5" 
+          />
+          <h1 className="text-2xl font-bold text-slate-800 tracking-tight text-center">
+            Digdarshan
+          </h1>
+          <h2 className="text-xs font-semibold text-slate-500 mt-1 text-center uppercase tracking-widest">
+            Admin Portal
+          </h2>
+        </div>
+
+        <h3 className="text-xl font-semibold text-slate-700 mb-6 text-center">
+          {isSignup ? 'Request Access' : 'Sign In'}
+        </h3>
 
         {error && (
-          <div className="bg-red-500 text-white p-3 rounded mb-4">
+          <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6 text-sm text-center font-medium border border-red-100">
             {error}
           </div>
         )}
 
         {success && (
-          <div className="bg-green-500 text-white p-3 rounded mb-4">
+          <div className="bg-emerald-50 text-emerald-600 p-3 rounded-lg mb-6 text-sm text-center font-medium border border-emerald-100">
             {success}
           </div>
         )}
@@ -106,7 +122,7 @@ const AdminLogin = () => {
               placeholder="Full Name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full p-3 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 text-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all placeholder-slate-400"
               required
             />
           )}
@@ -116,7 +132,7 @@ const AdminLogin = () => {
             placeholder="Email Address"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-3 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 text-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all placeholder-slate-400"
             required
           />
 
@@ -125,46 +141,49 @@ const AdminLogin = () => {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-3 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 text-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all placeholder-slate-400"
             required
           />
 
           {isSignup && (
             <textarea
-              placeholder="Why do you need admin access?"
+              placeholder="Reason for requesting access?"
               value={adminReason}
               onChange={(e) => setAdminReason(e.target.value)}
-              className="w-full p-3 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 text-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all placeholder-slate-400"
               rows="3"
               required
             />
-          )}          <button
+          )}
+
+          <button
             type="submit"
             disabled={isLoading}
-            className={`w-full bg-blue-600 text-white p-3 rounded font-semibold transition duration-200
-              ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-700'}`}
+            className={`w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white py-3.5 px-4 rounded-xl font-semibold shadow-sm transition-all duration-200
+              ${isLoading ? 'opacity-70 cursor-not-allowed' : 'hover:shadow-md'}`}
           >
             {isLoading ? (
               <div className="flex items-center justify-center">
                 <div className="w-5 h-5 border-t-2 border-b-2 border-white rounded-full animate-spin mr-2"></div>
-                {isSignup ? 'Submitting...' : 'Logging in...'}
+                {isSignup ? 'Submitting...' : 'Verifying...'}
               </div>
             ) : (
-              isSignup ? 'Request Admin Access' : 'Login'
+              isSignup ? 'Submit Request' : 'Login'
             )}
           </button>
         </form>
 
-        <div className="mt-4 text-center">
+        {/* Footer Toggles */}
+        <div className="mt-8 text-center">
           <button
             onClick={() => {
               setIsSignup(!isSignup);
               setError('');
               setSuccess('');
             }}
-            className="text-blue-400 hover:text-blue-300"
+            className="text-slate-500 hover:text-blue-600 text-sm font-medium transition-colors"
           >
-            {isSignup ? 'Already have admin access? Login' : 'Need admin access? Register'}
+            {isSignup ? 'Already have an account? Sign In' : 'Need access? Apply here'}
           </button>
         </div>
       </div>
