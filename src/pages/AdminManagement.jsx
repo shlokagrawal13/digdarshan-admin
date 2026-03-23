@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const AdminManagement = () => {
   const [pendingAdmins, setPendingAdmins] = useState([]);
@@ -21,18 +22,18 @@ const AdminManagement = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      setPendingAdmins(response.data.pending);
-      setApprovedAdmins(response.data.approved);
-      // Find revoked admins: isAdmin === false && adminApproved === false && role === 'admin'
+      setPendingAdmins(response.data.pending || []);
+      setApprovedAdmins(response.data.approved || []);
       const revoked = response.data.revoked || (response.data.allUsers ? response.data.allUsers.filter(u => u.role === 'admin' && !u.isAdmin && !u.adminApproved) : []);
       setRevokedAdmins(revoked);
     } catch (err) {
-      setError('Failed to fetch admin users');
+      const backendError = err.response?.data?.message || err.response?.data?.error || 'Failed to fetch admin users';
+      setError(backendError);
     }
   };
 
   const handleRevoke = async (userId) => {
-    if (loadingRevoke === userId) return; // Prevent double click
+    if (loadingRevoke === userId) return;
     setError('');
     setSuccess('');
     setLoadingRevoke(userId);
@@ -51,7 +52,7 @@ const AdminManagement = () => {
   };
 
   const handleReapprove = async (userId) => {
-    if (loadingReapprove === userId) return; // Prevent double click
+    if (loadingReapprove === userId) return;
     setError('');
     setSuccess('');
     setLoadingReapprove(userId);
@@ -69,158 +70,170 @@ const AdminManagement = () => {
     }
   };
 
-  return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">Admin Management</h1>
-
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
-        </div>
-      )}
-
-      {success && (
-        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-          {success}
-        </div>
-      )}
-
-      {/* Pending Admins Section */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold text-gray-700 mb-4">Pending Admin Requests</h2>
-        <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded mb-4">
-          Admin approvals are now handled through email. The owner will receive an email when a new admin verifies their email address.
-        </div>
-        {pendingAdmins.length === 0 ? (
-          <p className="text-gray-500">No pending admin requests</p>
-        ) : (
-          <div className="bg-white shadow overflow-hidden rounded-lg">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Name
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Email
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Reason
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {pendingAdmins.map((admin) => (
-                  <tr key={admin._id}>
-                    <td className="px-6 py-4 whitespace-nowrap">{admin.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{admin.email}</td>
-                    <td className="px-6 py-4">{admin.adminReason}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                        Pending Owner Approval
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {/* Approved Admins Section */}
-      <div>
-        <h2 className="text-xl font-semibold text-gray-700 mb-4">Approved Admins</h2>
-        {approvedAdmins.length === 0 ? (
-          <p className="text-gray-500">No approved admins</p>
-        ) : (
-          <div className="bg-white shadow overflow-hidden rounded-lg">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Name
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Email
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Approved By
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Approved At
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {approvedAdmins.map((admin) => (
-                  <tr key={admin._id}>
-                    <td className="px-6 py-4 whitespace-nowrap">{admin.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{admin.email}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{admin.approvedBy?.name || 'N/A'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {new Date(admin.approvedAt).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <button
-                        onClick={() => handleRevoke(admin._id)}
-                        className={`bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 ${loadingRevoke === admin._id ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        disabled={loadingRevoke === admin._id}
-                      >
-                        {loadingRevoke === admin._id ? 'Revoking...' : 'Revoke Access'}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {/* Revoked Admins Section */}
-      <div className="mt-8">
-        <h2 className="text-xl font-semibold text-gray-700 mb-4">Revoked Admins</h2>
-        {revokedAdmins.length === 0 ? (
-          <p className="text-gray-500">No revoked admins</p>
-        ) : (
-          <div className="bg-white shadow overflow-hidden rounded-lg">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {revokedAdmins.map((admin) => (
-                  <tr key={admin._id}>
-                    <td className="px-6 py-4 whitespace-nowrap">{admin.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{admin.email}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <button
-                        onClick={() => handleReapprove(admin._id)}
-                        className={`bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 ${loadingReapprove === admin._id ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        disabled={loadingReapprove === admin._id}
-                      >
-                        {loadingReapprove === admin._id ? 'Re-approving...' : 'Re-Approve'}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+  const TableHeader = ({ title }) => (
+    <div className="mb-4">
+      <h2 className="text-xl font-bold text-textmain">{title}</h2>
     </div>
+  );
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="p-4 md:p-8 max-w-7xl mx-auto w-full"
+    >
+      <div className="mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold text-textmain tracking-tight">Admin Management</h1>
+        <p className="text-sm font-medium text-textmain/60 mt-1 uppercase tracking-wider">Manage access & permissions</p>
+      </div>
+
+      <AnimatePresence mode="wait">
+        {error && (
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="bg-danger/20 text-red-800 p-4 rounded-xl mb-6 text-sm font-medium shadow-neu-pressed flex items-center gap-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            {error}
+          </motion.div>
+        )}
+        {success && (
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="bg-primary/20 text-emerald-800 p-4 rounded-xl mb-6 text-sm font-medium shadow-neu-pressed flex items-center gap-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+            {success}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="space-y-10">
+        {/* Pending Admins Section */}
+        <section>
+          <TableHeader title="Pending Admin Requests" />
+          <div className="bg-blue-100/50 border border-blue-200/50 text-blue-800 px-5 py-4 rounded-xl shadow-neu-sm mb-6 text-sm font-medium">
+            Admin approvals are now handled through email. The owner will receive an email when a new admin verifies their email address.
+          </div>
+          
+          {pendingAdmins.length === 0 ? (
+            <div className="neu-card p-8 text-center text-textmain/50 font-medium">No pending admin requests</div>
+          ) : (
+            <div className="neu-card overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-white/40 shadow-neu-sm bg-white/10">
+                      <th className="px-6 py-4 text-xs font-semibold text-textmain/70 uppercase tracking-wider">Name</th>
+                      <th className="px-6 py-4 text-xs font-semibold text-textmain/70 uppercase tracking-wider">Email</th>
+                      <th className="px-6 py-4 text-xs font-semibold text-textmain/70 uppercase tracking-wider">Reason</th>
+                      <th className="px-6 py-4 text-xs font-semibold text-textmain/70 uppercase tracking-wider">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/20">
+                    {pendingAdmins.map((admin, index) => (
+                      <motion.tr initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: index * 0.05 }} key={admin._id} className="hover:bg-white/30 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-textmain/90">{admin.name}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-textmain/70">{admin.email}</td>
+                        <td className="px-6 py-4 text-sm text-textmain/70 max-w-xs truncate">{admin.adminReason}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100/80 text-yellow-800 shadow-neu-pressed-sm border border-yellow-200">
+                            Pending Owner Approval
+                          </span>
+                        </td>
+                      </motion.tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* Approved Admins Section */}
+        <section>
+          <TableHeader title="Approved Admins" />
+          {approvedAdmins.length === 0 ? (
+            <div className="neu-card p-8 text-center text-textmain/50 font-medium">No approved admins</div>
+          ) : (
+            <div className="neu-card overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-white/40 shadow-neu-sm bg-white/10">
+                      <th className="px-6 py-4 text-xs font-semibold text-textmain/70 uppercase tracking-wider">Name</th>
+                      <th className="px-6 py-4 text-xs font-semibold text-textmain/70 uppercase tracking-wider">Email</th>
+                      <th className="px-6 py-4 text-xs font-semibold text-textmain/70 uppercase tracking-wider">Approved By</th>
+                      <th className="px-6 py-4 text-xs font-semibold text-textmain/70 uppercase tracking-wider">Approved At</th>
+                      <th className="px-6 py-4 text-xs font-semibold text-textmain/70 uppercase tracking-wider text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/20">
+                    {approvedAdmins.map((admin, index) => (
+                      <motion.tr initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: index * 0.05 }} key={admin._id} className="hover:bg-white/30 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-textmain/90">{admin.name}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-textmain/70">{admin.email}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-textmain/70">
+                          <span className="px-3 py-1 bg-white/40 shadow-neu-pressed-sm rounded-full text-xs font-semibold text-textmain/80">
+                            {admin.approvedBy?.name || 'N/A'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-textmain/70">
+                          {new Date(admin.approvedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                          <button
+                            onClick={() => handleRevoke(admin._id)}
+                            className={`neu-button-mini text-danger hover:text-red-700 ml-auto px-4 ${loadingRevoke === admin._id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            disabled={loadingRevoke === admin._id}
+                          >
+                            {loadingRevoke === admin._id ? 'Revoking...' : 'Revoke Access'}
+                          </button>
+                        </td>
+                      </motion.tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* Revoked Admins Section */}
+        <section>
+          <TableHeader title="Revoked Admins" />
+          {revokedAdmins.length === 0 ? (
+            <div className="neu-card p-8 text-center text-textmain/50 font-medium">No revoked admins</div>
+          ) : (
+            <div className="neu-card overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-white/40 shadow-neu-sm bg-white/10">
+                      <th className="px-6 py-4 text-xs font-semibold text-textmain/70 uppercase tracking-wider">Name</th>
+                      <th className="px-6 py-4 text-xs font-semibold text-textmain/70 uppercase tracking-wider">Email</th>
+                      <th className="px-6 py-4 text-xs font-semibold text-textmain/70 uppercase tracking-wider text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/20">
+                    {revokedAdmins.map((admin, index) => (
+                      <motion.tr initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: index * 0.05 }} key={admin._id} className="hover:bg-white/30 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-textmain/90">{admin.name}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-textmain/70">{admin.email}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                          <button
+                            onClick={() => handleReapprove(admin._id)}
+                            className={`neu-button-mini text-primary border-primary/30 hover:border-primary/60 ml-auto px-4 ${loadingReapprove === admin._id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            disabled={loadingReapprove === admin._id}
+                          >
+                            {loadingReapprove === admin._id ? 'Revalidating...' : 'Restore Access'}
+                          </button>
+                        </td>
+                      </motion.tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </section>
+      </div>
+    </motion.div>
   );
 };
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
@@ -19,7 +20,9 @@ const AdminLogin = () => {
     if (token) {
       navigate('/admin/add-news');
     }
-  }, [navigate]);  const handleLogin = async (e) => {
+  }, [navigate]);
+
+  const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
@@ -42,12 +45,14 @@ const AdminLogin = () => {
         const intendedPath = localStorage.getItem('intendedPath') || '/admin/add-news';
         navigate(intendedPath);
         localStorage.removeItem('intendedPath');
-      }, 1000);    } catch (err) {
+      }, 1000);
+    } catch (err) {
       setError(err.response?.data?.error || 'Login failed');
     } finally {
       setIsLoading(false);
     }
   };
+
   const handleSignup = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -73,7 +78,8 @@ const AdminLogin = () => {
       // Switch to login view after short delay
       setTimeout(() => {
         setIsSignup(false);
-      }, 2000);    } catch (err) {
+      }, 2000);
+    } catch (err) {
       setError(err.response?.data?.error || 'Registration failed');
     } finally {
       setIsLoading(false);
@@ -81,94 +87,138 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4 font-sans">
-      <div className="bg-white p-10 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 w-full max-w-md">
-        
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+        className="neu-card p-10 w-full max-w-md"
+      >
         {/* Brand Header */}
-        <div className="flex flex-col items-center mb-8">
-          <img 
-             src="/logo512.png" 
-             alt="Digdarshan Logo" 
-             className="w-20 h-20 object-contain mb-5" 
-          />
-          <h1 className="text-2xl font-bold text-slate-800 tracking-tight text-center">
+        <div className="flex flex-col items-center mb-10">
+          <motion.div 
+            initial={{ y: -10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="p-4 neu-card rounded-full mb-6 flex items-center justify-center bg-white/20"
+          >
+            <img 
+               src="/logo512.png" 
+               alt="Digdarshan" 
+               className="w-16 h-16 object-contain drop-shadow-md" 
+            />
+          </motion.div>
+          <h1 className="text-3xl font-bold tracking-tight text-textmain">
             Digdarshan
           </h1>
-          <h2 className="text-xs font-semibold text-slate-500 mt-1 text-center uppercase tracking-widest">
+          <h2 className="text-xs font-semibold text-textmain/60 mt-2 uppercase tracking-[0.2em]">
             Admin Portal
           </h2>
         </div>
 
-        <h3 className="text-xl font-semibold text-slate-700 mb-6 text-center">
-          {isSignup ? 'Request Access' : 'Sign In'}
+        <h3 className="text-xl font-medium text-textmain/80 mb-6 text-center">
+          {isSignup ? 'Request Access' : 'Welcome Back'}
         </h3>
 
-        {error && (
-          <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6 text-sm text-center font-medium border border-red-100">
-            {error}
-          </div>
-        )}
+        <AnimatePresence mode="wait">
+          {error && (
+            <motion.div 
+              key="error"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="bg-danger/20 text-red-800 p-3 rounded-xl mb-6 text-sm text-center font-medium shadow-neu-pressed-sm border border-danger/30"
+            >
+              {error}
+            </motion.div>
+          )}
 
-        {success && (
-          <div className="bg-emerald-50 text-emerald-600 p-3 rounded-lg mb-6 text-sm text-center font-medium border border-emerald-100">
-            {success}
-          </div>
-        )}
+          {success && (
+            <motion.div 
+              key="success"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="bg-primary/20 text-emerald-800 p-3 rounded-xl mb-6 text-sm text-center font-medium shadow-neu-pressed-sm border border-primary/30"
+            >
+              {success}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        <form onSubmit={isSignup ? handleSignup : handleLogin} className="space-y-4">
-          {isSignup && (
+        <form onSubmit={isSignup ? handleSignup : handleLogin} className="space-y-5">
+          <AnimatePresence>
+            {isSignup && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+              >
+                <input
+                  type="text"
+                  placeholder="Full Name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="neu-input"
+                  required
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div>
             <input
-              type="text"
-              placeholder="Full Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 text-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all placeholder-slate-400"
+              type="email"
+              placeholder="Email Address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="neu-input"
               required
             />
-          )}
+          </div>
 
-          <input
-            type="email"
-            placeholder="Email Address"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 text-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all placeholder-slate-400"
-            required
-          />
-
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 text-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all placeholder-slate-400"
-            required
-          />
-
-          {isSignup && (
-            <textarea
-              placeholder="Reason for requesting access?"
-              value={adminReason}
-              onChange={(e) => setAdminReason(e.target.value)}
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 text-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all placeholder-slate-400"
-              rows="3"
+          <div>
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="neu-input"
               required
             />
-          )}
+          </div>
+
+          <AnimatePresence>
+            {isSignup && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+              >
+                <textarea
+                  placeholder="Reason for requesting access?"
+                  value={adminReason}
+                  onChange={(e) => setAdminReason(e.target.value)}
+                  className="neu-input min-h-[100px] resize-y"
+                  rows="3"
+                  required
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <button
             type="submit"
             disabled={isLoading}
-            className={`w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white py-3.5 px-4 rounded-xl font-semibold shadow-sm transition-all duration-200
-              ${isLoading ? 'opacity-70 cursor-not-allowed' : 'hover:shadow-md'}`}
+            className={`w-full mt-2 ${isLoading ? 'opacity-70 cursor-not-allowed neu-button' : 'neu-button-primary'}`}
           >
             {isLoading ? (
               <div className="flex items-center justify-center">
-                <div className="w-5 h-5 border-t-2 border-b-2 border-white rounded-full animate-spin mr-2"></div>
+                <div className="w-5 h-5 border-t-2 border-b-2 border-emerald-800 rounded-full animate-spin mr-2"></div>
                 {isSignup ? 'Submitting...' : 'Verifying...'}
               </div>
             ) : (
-              isSignup ? 'Submit Request' : 'Login'
+              isSignup ? 'Submit Request' : 'Sign In'
             )}
           </button>
         </form>
@@ -181,12 +231,12 @@ const AdminLogin = () => {
               setError('');
               setSuccess('');
             }}
-            className="text-slate-500 hover:text-blue-600 text-sm font-medium transition-colors"
+            className="text-textmain/60 hover:text-textmain text-sm font-medium transition-colors"
           >
             {isSignup ? 'Already have an account? Sign In' : 'Need access? Apply here'}
           </button>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };
