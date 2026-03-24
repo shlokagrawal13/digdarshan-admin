@@ -291,12 +291,12 @@ const AutoPublishPage = () => {
                                         <label className="block font-semibold mb-3">Target Categories (Hindi)</label>
                                         <div className="flex flex-wrap gap-3">
                                             {CATEGORIES.map(cat => {
-                                                const isSelected = settings.categories.includes(cat.id);
+                                                const isSelected = (settings?.categories || []).includes(cat.id);
                                                 return (
                                                     <button
                                                         key={cat.id}
                                                         onClick={() => {
-                                                            let newCats = [...settings.categories];
+                                                            let newCats = [...(settings?.categories || [])];
                                                             if (isSelected && newCats.length > 1) {
                                                                 newCats = newCats.filter(c => c !== cat.id);
                                                             } else if (!isSelected) {
