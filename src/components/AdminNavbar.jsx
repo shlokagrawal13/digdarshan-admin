@@ -18,6 +18,7 @@ const AdminNavbar = () => {
         { path: '/admin/list-news', label: 'List News' },
         { path: '/admin/subscriptions', label: 'Subscriptions' },
         { path: '/admin/manage-admins', label: 'Manage Admins' },
+        { path: '/admin/auto-publish', label: '🤖 Auto Publisher' },
     ];
 
     const toggleMobileMenu = () => {

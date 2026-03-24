@@ -8,6 +8,7 @@ import ViewSubscriptions from './pages/ViewSubscriptions';
 import AdminLogin from './pages/AdminLogin';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminManagement from './pages/AdminManagement';
+import AutoPublishPage from './pages/admin/AutoPublishPage';
 
 function App() {    return (
         <Router>
@@ -26,6 +27,7 @@ function App() {    return (
                                     <Route path="/list-news" element={<NewsList />} />
                                     <Route path="/subscriptions" element={<ViewSubscriptions />} />
                                     <Route path="/manage-admins" element={<AdminManagement />} />
+                                    <Route path="/auto-publish" element={<AutoPublishPage />} />
                                     <Route path="/" element={<Navigate to="/admin/add-news" replace />} />
                                 </Routes>
                             </div>
