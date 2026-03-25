@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { FiPlay, FiSquare, FiSettings, FiShare2, FiImage, FiFileText, FiZap, FiCheckCircle, FiXCircle } from 'react-icons/fi';
+import { FiPlay, FiSquare, FiSettings, FiShare2, FiImage, FiFileText, FiZap, FiCheckCircle, FiXCircle, FiClock } from 'react-icons/fi';
 
 const AutoPublishPage = () => {
     const [settings, setSettings] = useState(null);
@@ -11,6 +11,46 @@ const AutoPublishPage = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [isManualRunning, setIsManualRunning] = useState(false);
+    const [currentTime, setCurrentTime] = useState(new Date());
+
+    useEffect(() => {
+        const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    const getNextRunTime = (cronExpression) => {
+        if (!cronExpression) return null;
+        const now = new Date();
+        const next = new Date(now);
+        next.setMinutes(0);
+        next.setSeconds(0);
+        next.setMilliseconds(0);
+        
+        if (cronExpression === '0 * * * *') {
+            next.setHours(now.getHours() + 1);
+        } else if (cronExpression === '0 0 * * *') {
+            next.setHours(24);
+        } else {
+            const match = cronExpression.match(/0 \*\/(\d+) \* \* \*/);
+            if (match) {
+                const step = parseInt(match[1], 10);
+                const currentHour = now.getHours();
+                const nextHour = currentHour + (step - (currentHour % step));
+                next.setHours(nextHour);
+            }
+        }
+        return next;
+    };
+
+    const formatTimeRemaining = (ms) => {
+        if (ms <= 0) return "00h 00m 00s";
+        const totalSeconds = Math.floor(ms / 1000);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        
+        return `${hours.toString().padStart(2, '0')}h ${minutes.toString().padStart(2, '0')}m ${seconds.toString().padStart(2, '0')}s`;
+    };
 
     // Fetch initial data
     const fetchSettings = async () => {
@@ -204,6 +244,33 @@ const AutoPublishPage = () => {
                         </div>
                     )}
                 </div>
+
+                {/* Live Timer Section */}
+                {settings.isRunning && (
+                    <div className="flex flex-col md:flex-row gap-4 mt-6">
+                        <div className="neu-card p-6 flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-background to-primary/5 border border-primary/20 relative overflow-hidden">
+                            <FiClock className="absolute -right-6 -top-6 w-32 h-32 text-primary/10" />
+                            <span className="text-sm font-semibold uppercase tracking-wider text-textmain/70 mb-2">Next Auto Publish In</span>
+                            <span className="text-3xl md:text-5xl font-black text-primary drop-shadow-sm font-mono tracking-tight text-center relative z-10">
+                                {formatTimeRemaining(getNextRunTime(settings.interval) - currentTime)}
+                            </span>
+                            <span className="text-xs uppercase font-medium text-textmain/50 mt-2 relative z-10">
+                                Scheduled for: {getNextRunTime(settings.interval)?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                        </div>
+                        {settings.lastRun && (
+                            <div className="neu-card p-6 flex-1 flex flex-col items-center justify-center bg-background border border-white/40">
+                                <span className="text-sm font-semibold uppercase tracking-wider text-textmain/70 mb-2">Time Since Last Publish</span>
+                                <span className="text-3xl md:text-5xl font-bold text-textmain/70 font-mono tracking-tight text-center">
+                                    {formatTimeRemaining(currentTime - new Date(settings.lastRun))}
+                                </span>
+                                <span className="text-xs uppercase font-medium text-textmain/50 mt-2">
+                                    Last ran at: {new Date(settings.lastRun).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* Main Content Area */}
