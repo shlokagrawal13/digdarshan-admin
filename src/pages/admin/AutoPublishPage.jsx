@@ -346,13 +346,13 @@ const AutoPublishPage = () => {
                                     <div>
                                         <label className="block font-semibold mb-3">AI Model Selection</label>
                                         <select 
-                                            value={settings.aiModel || 'gemini-2.5-flash'}
+                                            value={settings.aiModel || 'gemini-flash-latest'}
                                             onChange={(e) => setSettings({...settings, aiModel: e.target.value})}
                                             className="w-full py-3 px-4 rounded-xl border bg-background border-white/50 shadow-neu font-medium outline-none"
                                         >
-                                            <option value="gemini-2.5-flash">Gemini 2.5 Flash (Recommended - Fastest)</option>
-                                            <option value="gemini-3.0-flash">Gemini 3.0 Flash (Next Gen)</option>
-                                            <option value="gemini-2.0-pro-exp-02-05">Gemini 2.0 Pro (Advanced)</option>
+                                            <option value="gemini-flash-latest">Gemini Flash Fast (Maximum 1500 Requests/Day)</option>
+                                            <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash Lite (Free & Fast)</option>
+                                            <option value="gemini-2.5-flash">Gemini 2.5 Flash (Limit: 20 Requests/Day)</option>
                                         </select>
                                         <p className="text-xs opacity-70 mt-2">Choose the generative AI model to rewrite the news.</p>
                                     </div>
