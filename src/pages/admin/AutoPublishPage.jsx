@@ -15,7 +15,8 @@ const AutoPublishPage = () => {
     // Fetch initial data
     const fetchSettings = async () => {
         try {
-            const res = await axios.get('/api/auto-publish/settings', { withCredentials: true });
+            const res = await axios.get(`${process.env.REACT_APP_API_URL || ''}/api/auto-publish/settings`, { withCredentials: true });
+            if (typeof res.data === 'string') throw new Error('Invalid HTML response instead of JSON');
             setSettings(res.data);
             setIsLoading(false);
         } catch (error) {
@@ -26,8 +27,10 @@ const AutoPublishPage = () => {
 
     const fetchLogs = async () => {
         try {
-            const res = await axios.get('/api/auto-publish/logs', { withCredentials: true });
-            setLogs(res.data);
+            const res = await axios.get(`${process.env.REACT_APP_API_URL || ''}/api/auto-publish/logs`, { withCredentials: true });
+            if (Array.isArray(res.data)) {
+                setLogs(res.data);
+            }
         } catch (error) {
             console.error(error);
         }
@@ -55,7 +58,7 @@ const AutoPublishPage = () => {
         setIsSaving(true);
         try {
             const endpoint = settings.isRunning ? '/stop' : '/start';
-            const res = await axios.post(`/api/auto-publish${endpoint}`, {}, { withCredentials: true });
+            const res = await axios.post(`${process.env.REACT_APP_API_URL || ''}/api/auto-publish${endpoint}`, {}, { withCredentials: true });
             setSettings(res.data.settings);
             toast.success(res.data.message);
         } catch (error) {
@@ -67,7 +70,7 @@ const AutoPublishPage = () => {
     const saveSettings = async () => {
         setIsSaving(true);
         try {
-            const res = await axios.put('/api/auto-publish/settings', settings, { withCredentials: true });
+            const res = await axios.put(`${process.env.REACT_APP_API_URL || ''}/api/auto-publish/settings`, settings, { withCredentials: true });
             setSettings(res.data);
             toast.success('Settings saved successfully');
         } catch (error) {
@@ -79,7 +82,7 @@ const AutoPublishPage = () => {
     const runManualBatch = async () => {
         setIsManualRunning(true);
         try {
-            await axios.post('/api/auto-publish/run-now', {}, { withCredentials: true });
+            await axios.post(`${process.env.REACT_APP_API_URL || ''}/api/auto-publish/run-now`, {}, { withCredentials: true });
             toast.info('⚡ Job initiated in background. Publishing started.');
             setTimeout(() => {
                 fetchSettings(); // Update isPublishing status
@@ -138,25 +141,25 @@ const AutoPublishPage = () => {
             initial={{ opacity: 0, y: 10 }} 
             animate={{ opacity: 1, y: 0 }} 
             transition={{ duration: 0.4 }}
-            className="w-full max-w-6xl mx-auto pb-12"
+            className="w-full max-w-6xl mx-auto px-4 md:px-8 pb-12"
         >
             {/* Header Section */}
-            <div className="glass-panel p-8 mb-8 relative overflow-hidden">
+            <div className="glass-panel p-5 md:p-8 mb-6 md:mb-8 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
                 
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
-                    <div>
-                        <h1 className="text-3xl font-bold text-textmain flex items-center gap-3">
-                            <span className="text-4xl">🤖</span> AI Auto Publisher
+                    <div className="w-full">
+                        <h1 className="text-2xl md:text-3xl font-bold text-textmain flex items-center gap-3">
+                            <span className="text-3xl md:text-4xl">🤖</span> AI Auto Publisher
                         </h1>
-                        <p className="text-textmain/70 mt-2 font-medium">Fully automated news harvesting & publishing system</p>
+                        <p className="text-textmain/70 mt-2 text-sm sm:text-base font-medium">Fully automated news harvesting & publishing system</p>
                     </div>
 
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-col sm:flex-row items-stretch w-full md:w-auto gap-3 sm:gap-4">
                         <button 
                             onClick={toggleScheduler}
                             disabled={isSaving}
-                            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium shadow-neu transition-all duration-300 border border-white/50 ${
+                            className={`flex justify-center items-center gap-2 px-4 sm:px-6 py-3 rounded-xl font-medium shadow-neu transition-all duration-300 border border-white/50 w-full sm:w-auto ${
                                 settings.isRunning 
                                 ? 'bg-danger/20 text-red-800 hover:bg-danger/30 hover:shadow-neu-sm active:shadow-neu-pressed' 
                                 : 'bg-primary/20 text-emerald-800 hover:bg-primary/30 hover:shadow-neu-sm active:shadow-neu-pressed'
@@ -169,7 +172,7 @@ const AutoPublishPage = () => {
                         <button 
                             onClick={runManualBatch}
                             disabled={settings?.isPublishing || isManualRunning}
-                            className={`flex items-center gap-2 px-6 py-3 bg-yellow-400/20 text-yellow-800 border border-white/60 rounded-xl font-medium shadow-neu transition-all duration-300 ${settings?.isPublishing || isManualRunning ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-neu-sm active:shadow-neu-pressed'}`}
+                            className={`flex justify-center items-center gap-2 px-4 sm:px-10 py-3 bg-yellow-400/20 text-yellow-800 border border-white/60 rounded-xl font-medium shadow-neu transition-all duration-300 w-full sm:w-auto ${settings?.isPublishing || isManualRunning ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-neu-sm active:shadow-neu-pressed'}`}
                         >
                             {settings?.isPublishing ? (
                                 <><div className="w-4 h-4 rounded-full border-2 border-yellow-800 border-t-transparent animate-spin"></div> Publishing...</>
@@ -204,15 +207,15 @@ const AutoPublishPage = () => {
             </div>
 
             {/* Main Content Area */}
-            <div className="flex gap-8">
+            <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
                 {/* Sidebar Navigation */}
-                <div className="w-64 flex-shrink-0">
-                    <div className="glass-panel p-4 flex flex-col gap-3 sticky top-6">
+                <div className="w-full lg:w-64 flex-shrink-0">
+                    <div className="glass-panel p-3 lg:p-4 flex flex-row lg:flex-col gap-2 lg:gap-3 sticky top-6 overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                         {TABS.map(tab => (
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
-                                className={`flex items-center gap-3 w-full text-left px-4 py-3 rounded-xl transition-all duration-300 font-medium ${
+                                className={`flex items-center justify-center lg:justify-start gap-2 lg:gap-3 w-auto lg:w-full whitespace-nowrap text-left px-4 py-2.5 lg:py-3 rounded-xl transition-all duration-300 font-medium text-sm lg:text-base flex-shrink-0 lg:flex-shrink ${
                                     activeTab === tab.id 
                                     ? 'bg-primary/20 shadow-neu-pressed border-white/60 text-emerald-800' 
                                     : 'hover:bg-white/40'
@@ -225,7 +228,7 @@ const AutoPublishPage = () => {
                 </div>
 
                 {/* Tab Content */}
-                <div className="flex-grow">
+                <div className="flex-grow w-full overflow-hidden">
                     <AnimatePresence mode="wait">
                         <motion.div
                             key={activeTab}
@@ -233,7 +236,7 @@ const AutoPublishPage = () => {
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
                             transition={{ duration: 0.2 }}
-                            className="glass-panel p-8"
+                            className="glass-panel p-5 sm:p-6 md:p-8"
                         >
                             {/* SETTINGS TAB */}
                             {activeTab === 'settings' && (
@@ -242,7 +245,7 @@ const AutoPublishPage = () => {
                                     
                                     <div>
                                         <label className="block font-semibold mb-3">Cron Interval</label>
-                                        <div className="grid grid-cols-3 gap-4">
+                                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                                             {INTERVALS.map(int => (
                                                 <button
                                                     key={int.value}
@@ -289,7 +292,7 @@ const AutoPublishPage = () => {
 
                                     <div>
                                         <label className="block font-semibold mb-3">Target Categories (Hindi)</label>
-                                        <div className="flex flex-wrap gap-3">
+                                        <div className="flex flex-wrap gap-2 sm:gap-3">
                                             {CATEGORIES.map(cat => {
                                                 const isSelected = (settings?.categories || []).includes(cat.id);
                                                 return (
@@ -331,7 +334,7 @@ const AutoPublishPage = () => {
                                     <h2 className="text-2xl font-bold mb-2">Social Media Broadcasting</h2>
                                     <p className="opacity-70 mb-8">Generated posts will be automatically shared to these active platforms.</p>
                                     
-                                    <div className="grid grid-cols-2 gap-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                                         {[
                                             { id: 'telegram', name: 'Telegram', color: 'border-blue-400' },
                                             { id: 'facebook', name: 'Facebook', color: 'border-blue-700' },
@@ -345,7 +348,7 @@ const AutoPublishPage = () => {
                                                         <input 
                                                             type="checkbox" 
                                                             className="sr-only peer"
-                                                            checked={settings.platforms[platform.id]}
+                                                            checked={settings?.platforms?.[platform.id] || false}
                                                             onChange={() => setSettings({
                                                                 ...settings, 
                                                                 platforms: { ...settings.platforms, [platform.id]: !settings.platforms[platform.id] }
@@ -404,14 +407,14 @@ const AutoPublishPage = () => {
                                     </div>
                                     
                                     <div className="space-y-4">
-                                        {logs.length === 0 ? (
+                                        {(!Array.isArray(logs) || logs.length === 0) ? (
                                             <div className="text-center p-8 opacity-50">No logs generated yet.</div>
                                         ) : (
                                             logs.map((log, i) => (
                                                 <div key={i} className="neu-card p-5">
                                                     <div className="flex justify-between items-center border-b border-white/20 pb-3 mb-3">
                                                         <span className="font-semibold text-sm">{new Date(log.timestamp).toLocaleString()}</span>
-                                                        <div className="flex gap-4">
+                                                        <div className="flex flex-wrap gap-3 md:gap-4">
                                                             <span className="text-emerald-600 flex items-center gap-1"><FiCheckCircle/> {log.publishedCount} Published</span>
                                                             <span className="text-red-500 flex items-center gap-1"><FiXCircle/> {log.failedCount} Failed</span>
                                                         </div>

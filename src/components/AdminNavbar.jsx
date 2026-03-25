@@ -78,12 +78,14 @@ const AdminNavbar = () => {
                 </div>
 
                 {/* Desktop Action (Logout) */}
-                <button
-                    onClick={handleLogout}
-                    className="hidden md:block neu-button-mini px-4 py-2 text-sm text-danger font-medium hover:text-red-700"
-                >
-                    Logout
-                </button>
+                <div className="hidden md:block">
+                    <button
+                        onClick={handleLogout}
+                        className="neu-button-mini px-4 py-2 text-sm text-danger font-medium hover:text-red-700"
+                    >
+                        Logout
+                    </button>
+                </div>
             </motion.div>
 
             {/* Mobile Navigation Dropdown */}
