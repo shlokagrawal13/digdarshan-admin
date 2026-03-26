@@ -10,6 +10,7 @@ const AutoPublishPage = () => {
     const [activeTab, setActiveTab] = useState('settings');
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+    const [isSaved, setIsSaved] = useState(false);
     const [isManualRunning, setIsManualRunning] = useState(false);
     const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -26,7 +27,9 @@ const AutoPublishPage = () => {
         next.setSeconds(0);
         next.setMilliseconds(0);
         
-        if (cronExpression === '0 * * * *') {
+        if (cronExpression === '* * * * *') {
+            next.setMinutes(now.getMinutes() + 1);
+        } else if (cronExpression === '0 * * * *') {
             next.setHours(now.getHours() + 1);
         } else if (cronExpression === '0 0 * * *') {
             next.setHours(24);
@@ -113,6 +116,8 @@ const AutoPublishPage = () => {
             const res = await axios.put(`${process.env.REACT_APP_API_URL || ''}/api/auto-publish/settings`, settings, { withCredentials: true });
             setSettings(res.data);
             toast.success('Settings saved successfully');
+            setIsSaved(true);
+            setTimeout(() => setIsSaved(false), 2000);
         } catch (error) {
             toast.error('Failed to save settings');
         }
@@ -150,6 +155,7 @@ const AutoPublishPage = () => {
     ];
 
     const INTERVALS = [
+        { value: '* * * * *', label: '1 Minute (Test)' },
         { value: '0 * * * *', label: '1 Hour' },
         { value: '0 */2 * * *', label: '2 Hours' },
         { value: '0 */4 * * *', label: '4 Hours' },
@@ -205,8 +211,13 @@ const AutoPublishPage = () => {
                                 : 'bg-primary/20 text-emerald-800 hover:bg-primary/30 hover:shadow-neu-sm active:shadow-neu-pressed'
                             }`}
                         >
-                            {settings.isRunning ? <FiSquare /> : <FiPlay />}
-                            {settings.isRunning ? 'Stop Automation' : 'Start Automation'}
+                            {isSaving ? (
+                                <><FiClock className="animate-spin" /> Saving...</>
+                            ) : settings.isRunning ? (
+                                <><FiSquare /> Stop Automation</>
+                            ) : (
+                                <><FiPlay /> Start Automation</>
+                            )}
                         </button>
 
                         <button 
@@ -214,8 +225,8 @@ const AutoPublishPage = () => {
                             disabled={settings?.isPublishing || isManualRunning}
                             className={`flex justify-center items-center gap-2 px-4 sm:px-10 py-3 bg-yellow-400/20 text-yellow-800 border border-white/60 rounded-xl font-medium shadow-neu transition-all duration-300 w-full sm:w-auto ${settings?.isPublishing || isManualRunning ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-neu-sm active:shadow-neu-pressed'}`}
                         >
-                            {settings?.isPublishing ? (
-                                <><div className="w-4 h-4 rounded-full border-2 border-yellow-800 border-t-transparent animate-spin"></div> Publishing...</>
+                            {settings?.isPublishing || isManualRunning ? (
+                                <><FiClock className="animate-spin" /> Publishing...</>
                             ) : (
                                 <><FiZap /> Abhi Publish Karo</>
                             )}
@@ -224,23 +235,23 @@ const AutoPublishPage = () => {
                 </div>
 
                 {/* Status Badges */}
-                <div className="flex flex-wrap gap-4 mt-8 pt-6 border-t border-white/40">
-                    <div className="neu-card px-4 py-2 flex items-center gap-2">
+                <div className="grid grid-cols-2 md:flex md:flex-wrap gap-3 md:gap-4 mt-8 pt-6 border-t border-white/40">
+                    <div className="neu-card px-3 py-3 md:px-4 md:py-2 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 text-center">
                         <div className={`w-3 h-3 rounded-full ${settings.isRunning ? 'bg-emerald-500 shadow-[0_0_10px_#10b981]' : 'bg-red-500'}`}></div>
-                        <span className="font-semibold">{settings.isRunning ? 'Running' : 'Stopped'}</span>
+                        <span className="font-semibold text-sm sm:text-base">{settings.isRunning ? 'Running' : 'Stopped'}</span>
                     </div>
-                    <div className="neu-card px-4 py-2">
-                        <span className="text-sm opacity-70">Interval:</span> 
-                        <span className="font-semibold ml-2">{INTERVALS.find(i => i.value === settings.interval)?.label || settings.interval}</span>
+                    <div className="neu-card px-3 py-3 md:px-4 md:py-2 flex flex-col sm:flex-row items-center justify-center text-center">
+                        <span className="text-xs sm:text-sm opacity-70">Interval:</span> 
+                        <span className="font-semibold sm:ml-2 text-sm sm:text-base">{INTERVALS.find(i => i.value === settings.interval)?.label || settings.interval}</span>
                     </div>
-                    <div className="neu-card px-4 py-2">
-                        <span className="text-sm opacity-70">Batch Size:</span> 
-                        <span className="font-semibold ml-2">{settings.newsPerBatch} News</span>
+                    <div className="neu-card px-3 py-3 md:px-4 md:py-2 flex flex-col sm:flex-row items-center justify-center text-center">
+                        <span className="text-xs sm:text-sm opacity-70">Batch Size:</span> 
+                        <span className="font-semibold sm:ml-2 text-sm sm:text-base">{settings.newsPerBatch} News</span>
                     </div>
                     {settings.lastRun && (
-                        <div className="neu-card px-4 py-2">
-                            <span className="text-sm opacity-70">Last Run:</span> 
-                            <span className="font-semibold ml-2">{new Date(settings.lastRun).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        <div className="neu-card px-3 py-3 md:px-4 md:py-2 flex flex-col sm:flex-row items-center justify-center text-center">
+                            <span className="text-xs sm:text-sm opacity-70">Last Run:</span> 
+                            <span className="font-semibold sm:ml-2 text-sm sm:text-base">{new Date(settings.lastRun).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                         </div>
                     )}
                 </div>
@@ -346,11 +357,12 @@ const AutoPublishPage = () => {
                                     <div>
                                         <label className="block font-semibold mb-3">AI Model Selection</label>
                                         <select 
-                                            value={settings.aiModel || 'gemini-flash-latest'}
+                                            value={settings.aiModel || 'gemini-1.5-flash'}
                                             onChange={(e) => setSettings({...settings, aiModel: e.target.value})}
                                             className="w-full py-3 px-4 rounded-xl border bg-background border-white/50 shadow-neu font-medium outline-none"
                                         >
-                                            <option value="gemini-flash-latest">Gemini Flash Fast (Maximum 1500 Requests/Day)</option>
+                                            <option value="gemini-1.5-flash">Gemini 1.5 Flash Fast (Maximum 1500 Requests/Day)</option>
+                                            <option value="gemini-flash-latest">Gemini 3.0 Flash Latest (Limit: 20 Requests/Day)</option>
                                             <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash Lite (Free & Fast)</option>
                                             <option value="gemini-2.5-flash">Gemini 2.5 Flash (Limit: 20 Requests/Day)</option>
                                         </select>
@@ -359,7 +371,7 @@ const AutoPublishPage = () => {
 
                                     <div>
                                         <label className="block font-semibold mb-3">Target Categories (Hindi)</label>
-                                        <div className="flex flex-wrap gap-2 sm:gap-3">
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
                                             {CATEGORIES.map(cat => {
                                                 const isSelected = (settings?.categories || []).includes(cat.id);
                                                 return (
@@ -374,7 +386,7 @@ const AutoPublishPage = () => {
                                                             }
                                                             setSettings({...settings, categories: newCats});
                                                         }}
-                                                        className={`px-5 py-2 rounded-xl border font-medium transition-all ${
+                                                        className={`w-full py-2.5 px-2 text-center rounded-xl border font-medium transition-all duration-300 ${
                                                             isSelected 
                                                             ? 'bg-primary/20 shadow-neu-pressed border-white/60 text-emerald-800'
                                                             : 'bg-background shadow-neu border-white/50 hover:shadow-neu-sm'
@@ -388,8 +400,20 @@ const AutoPublishPage = () => {
                                     </div>
 
                                     <div className="pt-4 border-t border-white/30 text-right">
-                                        <button onClick={saveSettings} disabled={isSaving} className="neu-button-primary">
-                                            {isSaving ? 'Saving...' : 'Save Settings'}
+                                        <button 
+                                            onClick={saveSettings} 
+                                            disabled={isSaving || isSaved} 
+                                            className={`neu-button-primary flex items-center justify-center gap-2 transition-all duration-300 w-full md:w-auto ml-auto ${
+                                                isSaved ? '!bg-emerald-500 !text-white' : ''
+                                            }`}
+                                        >
+                                            {isSaving ? (
+                                                <><FiClock className="animate-spin" /> Saving...</>
+                                            ) : isSaved ? (
+                                                <><FiCheckCircle /> Saved Successfully!</>
+                                            ) : (
+                                                'Save Settings'
+                                            )}
                                         </button>
                                     </div>
                                 </div>
@@ -430,8 +454,20 @@ const AutoPublishPage = () => {
                                     </div>
 
                                     <div className="pt-8 text-right">
-                                        <button onClick={saveSettings} disabled={isSaving} className="neu-button-primary">
-                                            {isSaving ? 'Saving...' : 'Save Settings'}
+                                        <button 
+                                            onClick={saveSettings} 
+                                            disabled={isSaving || isSaved} 
+                                            className={`neu-button-primary flex items-center justify-center gap-2 transition-all duration-300 w-full md:w-auto ml-auto ${
+                                                isSaved ? '!bg-emerald-500 !text-white' : ''
+                                            }`}
+                                        >
+                                            {isSaving ? (
+                                                <><FiClock className="animate-spin" /> Saving...</>
+                                            ) : isSaved ? (
+                                                <><FiCheckCircle /> Saved Successfully!</>
+                                            ) : (
+                                                'Save Settings'
+                                            )}
                                         </button>
                                     </div>
                                 </div>
